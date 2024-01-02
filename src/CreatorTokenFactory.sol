@@ -47,7 +47,8 @@ contract CreatorTokenFactory {
     uint32 inflectionPoint;
   }
 
-  address public immutable OWNER;
+  address public ADMIN;
+  address public DEPLOYER;
 
   /// @notice Emitted when a new CreatorToken and SigmoidBondingCurve pair is successfully
   /// deployed.
@@ -68,7 +69,7 @@ contract CreatorTokenFactory {
   error CreatorTokenFactory__InvalidAttestation();
 
   constructor() {
-    OWNER = msg.sender;
+    ADMIN = msg.sender;
   }
 
   /// @notice Deploys a CreatorToken and SigmoidBondingCurve pair for the given configuration,
@@ -78,7 +79,9 @@ contract CreatorTokenFactory {
   /// @return _creatorToken The address of the newly deployed CreatorToken contract.
   function deploy(DeploymentConfig memory _config) external returns (CreatorToken _creatorToken) {
     // Move this to a modifier & add an error & create test case
-    if (msg.sender != OWNER) revert("CreatorTokenFactory: Only owner can deploy");
+    if (DEPLOYER == address(0)) revert("CreatorTokenFactory: Deployer address not set");
+    if (msg.sender != DEPLOYER) revert("CreatorTokenFactory: Only owner can deploy");
+    if (msg.sender == address(0)) revert("CreatorTokenFactory: address(0) cannot deploy");
 
     SigmoidBondingCurve _bondingCurve =
     new SigmoidBondingCurve(_config.basePrice, _config.linearPriceSlope, _config.inflectionPrice, _config.inflectionPoint);
@@ -99,9 +102,15 @@ contract CreatorTokenFactory {
     emit CreatorTokenDeployed(_creatorToken, _bondingCurve, _config);
   }
 
-  function transferOwnership(address _newOwner) external {
+  function setAdmin(address _newAdmin) external {
     // Move this to a modifier & add an error & create test case
-    if (msg.sender != OWNER) revert("CreatorTokenFactory: Only owner can transfer ownership");
-    OWNER = _newOwner;
+    if (msg.sender != ADMIN) revert("CreatorTokenFactory: Only admin can set new admin");
+    ADMIN = _newAdmin;
+  }
+
+  function setDeployer(address _newDeployer) external {
+    // Move this to a modifier & add an error & create test case
+    if (msg.sender != ADMIN) revert("CreatorTokenFactory: Only admin can set new deployer");
+    DEPLOYER = _newDeployer;
   }
 }

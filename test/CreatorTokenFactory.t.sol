@@ -71,6 +71,9 @@ contract TokenDeployment is CreatorTokenFactoryTest {
       inflectionPoint: 2000
     });
 
+    address _newDeployer = vm.addr(1);
+    factory.setDeployer(_newDeployer);
+
     // hardcoded, pre-calculated addresses for the test config, so we can expect the event emissions
     CreatorToken preCalculatedTokenAddress =
       CreatorToken(0x037eDa3aDB1198021A9b2e88C22B464fD38db3f3);
@@ -79,10 +82,13 @@ contract TokenDeployment is CreatorTokenFactoryTest {
 
     vm.expectEmit(true, true, true, true);
     emit CreatorTokenDeployed(preCalculatedTokenAddress, preCalculatedBondingCurve, _config);
+    vm.startPrank(_newDeployer);
     CreatorToken _deployedToken = factory.deploy(_config);
+    vm.stopPrank();
     _assertValidDeployment(_config, _deployedToken);
   }
 
+  // Learn about fuxx and get this working
   // Fuzz the attestation and config and deploy
   // function test_DeploysCreatorToken(CreatorTokenFactory.DeploymentConfig memory _config) public {
   //   CreatorToken _deployedToken = factory.deploy(_config);
